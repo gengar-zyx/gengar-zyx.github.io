@@ -1,6 +1,6 @@
 ---
 date: 2024-11-02
-draft: true
+draft: false
 title: 'MoneyWiz 自动更新国内基金价格'
 tags: [MoneyWiz, Beancount, 记账]
 category: '理财'
