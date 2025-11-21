@@ -1,0 +1,126 @@
+<!doctype html><html lang=en dir=auto data-theme=auto><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>MoneyWiz 自动更新国内基金价格 | Meowstic's Site</title><meta name=keywords content="MoneyWiz,Beancount,记账"><meta name=description content='如题，MoneyWiz 虽然能够根据基金代码自动更新基金价格，但是使用的是 yahoo 的 api，不仅链接不稳定，对中国基金的支持也不够好。更糟糕的是，国内基金的代码可能和国外股票代码撞上，导致更新错误价格。
+更新价格接口
+万幸，官方文档1中给出了更新价格的 scheme 规范，理论上只要在 safari 浏览器中输入类似于 moneywiz://updateholding?symbol={FCODE}.CN&amp;price={dwjz}&amp;date={date} 的链接即可更新价格。
+获取价格&自动化脚本
+网上基本都是在爬天天基金的数据，本项目自然不会例外，天天基金 Api 给出了简便的接口，在本地部署这个项目即可，安装教程见快速开始。
+为了方便起见，我是在mac上跑的脚本~~，如果没有mac，可以尝试下脚本+捷径的方案？我没试过~~
+为了防止和国外股票撞上，给基金代码后面加了 .CN 尾缀，这一点需要在 MoneyWiz 记录时注意补上，脚本比较简单，就直接给出来了。
+import webbrowser  
+import requests  
+import json
+import time
+
+pageIndex = 1  
+pagesize = 100  
+  
+tickers = ["002963"]  # 基金代码  
+for ticker in tickers:  
+    FCODE = ticker  
+    resp = requests.get("http://localhost:3000/fundMNHisNetList", params={  
+        "FCODE": FCODE,  
+        "pageIndex": pageIndex,  
+        "pagesize": pagesize  
+    })  
+  
+    if resp.status_code >= 400:  
+        continue  
+  
+    datas = json.loads(resp.content).get("Datas", [])  
+    for data in datas:  
+        dwjz = data.get("DWJZ", "")  
+        if dwjz == "":  
+            continue  
+        date = data.get("FSRQ", "")  
+        if date == "":  
+            continue  
+        date = date.replace("-", "")  
+  
+        moneywiz = f"moneywiz://updateholding?symbol={FCODE}.CN&amp;price={dwjz}&amp;date={date}"  
+        webbrowser.open(moneywiz)  # 运行  
+        time.sleep(1)
+在结尾，感谢 moneywiz-china-funds 给到的思路。'><meta name=author content="Meowstic"><link rel=canonical href=http://localhost:1313/posts/moneywiz-%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0%E5%9B%BD%E5%86%85%E5%9F%BA%E9%87%91%E4%BB%B7%E6%A0%BC/><link crossorigin=anonymous href=/assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css integrity="sha256-NDzEgLn/yPBMy+XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as=style><link rel=icon href=http://localhost:1313/favicon.ico><link rel=icon type=image/png sizes=16x16 href=http://localhost:1313/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=http://localhost:1313/favicon-32x32.png><link rel=apple-touch-icon href=http://localhost:1313/apple-touch-icon.png><link rel=mask-icon href=http://localhost:1313/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=http://localhost:1313/posts/moneywiz-%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0%E5%9B%BD%E5%86%85%E5%9F%BA%E9%87%91%E4%BB%B7%E6%A0%BC/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51);color-scheme:dark}.list{background:var(--theme)}.toc{background:var(--entry)}}@media(prefers-color-scheme:light){.list::-webkit-scrollbar-thumb{border-color:var(--code-bg)}}</style></noscript><script>localStorage.getItem("pref-theme")==="dark"?document.querySelector("html").dataset.theme="dark":localStorage.getItem("pref-theme")==="light"?document.querySelector("html").dataset.theme="light":window.matchMedia("(prefers-color-scheme: dark)").matches?document.querySelector("html").dataset.theme="dark":document.querySelector("html").dataset.theme="light"</script><meta property="og:url" content="http://localhost:1313/posts/moneywiz-%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0%E5%9B%BD%E5%86%85%E5%9F%BA%E9%87%91%E4%BB%B7%E6%A0%BC/"><meta property="og:site_name" content="Meowstic's Site"><meta property="og:title" content="MoneyWiz 自动更新国内基金价格"><meta property="og:description" content='如题，MoneyWiz 虽然能够根据基金代码自动更新基金价格，但是使用的是 yahoo 的 api，不仅链接不稳定，对中国基金的支持也不够好。更糟糕的是，国内基金的代码可能和国外股票代码撞上，导致更新错误价格。
+更新价格接口 万幸，官方文档1中给出了更新价格的 scheme 规范，理论上只要在 safari 浏览器中输入类似于 moneywiz://updateholding?symbol={FCODE}.CN&amp;price={dwjz}&amp;date={date} 的链接即可更新价格。
+获取价格&自动化脚本 网上基本都是在爬天天基金的数据，本项目自然不会例外，天天基金 Api 给出了简便的接口，在本地部署这个项目即可，安装教程见快速开始。
+为了方便起见，我是在mac上跑的脚本~~，如果没有mac，可以尝试下脚本+捷径的方案？我没试过~~
+为了防止和国外股票撞上，给基金代码后面加了 .CN 尾缀，这一点需要在 MoneyWiz 记录时注意补上，脚本比较简单，就直接给出来了。
+import webbrowser import requests import json import time pageIndex = 1 pagesize = 100 tickers = ["002963"] # 基金代码 for ticker in tickers: FCODE = ticker resp = requests.get("http://localhost:3000/fundMNHisNetList", params={ "FCODE": FCODE, "pageIndex": pageIndex, "pagesize": pagesize }) if resp.status_code >= 400: continue datas = json.loads(resp.content).get("Datas", []) for data in datas: dwjz = data.get("DWJZ", "") if dwjz == "": continue date = data.get("FSRQ", "") if date == "": continue date = date.replace("-", "") moneywiz = f"moneywiz://updateholding?symbol={FCODE}.CN&amp;price={dwjz}&amp;date={date}" webbrowser.open(moneywiz) # 运行 time.sleep(1) 在结尾，感谢 moneywiz-china-funds 给到的思路。'><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-11-02T00:00:00+00:00"><meta property="article:modified_time" content="2024-11-02T00:00:00+00:00"><meta property="article:tag" content="MoneyWiz"><meta property="article:tag" content="Beancount"><meta property="article:tag" content="记账"><meta name=twitter:card content="summary"><meta name=twitter:title content="MoneyWiz 自动更新国内基金价格"><meta name=twitter:description content='如题，MoneyWiz 虽然能够根据基金代码自动更新基金价格，但是使用的是 yahoo 的 api，不仅链接不稳定，对中国基金的支持也不够好。更糟糕的是，国内基金的代码可能和国外股票代码撞上，导致更新错误价格。
+更新价格接口
+万幸，官方文档1中给出了更新价格的 scheme 规范，理论上只要在 safari 浏览器中输入类似于 moneywiz://updateholding?symbol={FCODE}.CN&amp;price={dwjz}&amp;date={date} 的链接即可更新价格。
+获取价格&自动化脚本
+网上基本都是在爬天天基金的数据，本项目自然不会例外，天天基金 Api 给出了简便的接口，在本地部署这个项目即可，安装教程见快速开始。
+为了方便起见，我是在mac上跑的脚本~~，如果没有mac，可以尝试下脚本+捷径的方案？我没试过~~
+为了防止和国外股票撞上，给基金代码后面加了 .CN 尾缀，这一点需要在 MoneyWiz 记录时注意补上，脚本比较简单，就直接给出来了。
+import webbrowser  
+import requests  
+import json
+import time
+
+pageIndex = 1  
+pagesize = 100  
+  
+tickers = ["002963"]  # 基金代码  
+for ticker in tickers:  
+    FCODE = ticker  
+    resp = requests.get("http://localhost:3000/fundMNHisNetList", params={  
+        "FCODE": FCODE,  
+        "pageIndex": pageIndex,  
+        "pagesize": pagesize  
+    })  
+  
+    if resp.status_code >= 400:  
+        continue  
+  
+    datas = json.loads(resp.content).get("Datas", [])  
+    for data in datas:  
+        dwjz = data.get("DWJZ", "")  
+        if dwjz == "":  
+            continue  
+        date = data.get("FSRQ", "")  
+        if date == "":  
+            continue  
+        date = date.replace("-", "")  
+  
+        moneywiz = f"moneywiz://updateholding?symbol={FCODE}.CN&amp;price={dwjz}&amp;date={date}"  
+        webbrowser.open(moneywiz)  # 运行  
+        time.sleep(1)
+在结尾，感谢 moneywiz-china-funds 给到的思路。'><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"http://localhost:1313/posts/"},{"@type":"ListItem","position":2,"name":"MoneyWiz 自动更新国内基金价格","item":"http://localhost:1313/posts/moneywiz-%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0%E5%9B%BD%E5%86%85%E5%9F%BA%E9%87%91%E4%BB%B7%E6%A0%BC/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"MoneyWiz 自动更新国内基金价格","name":"MoneyWiz 自动更新国内基金价格","description":"如题，MoneyWiz 虽然能够根据基金代码自动更新基金价格，但是使用的是 yahoo 的 api，不仅链接不稳定，对中国基金的支持也不够好。更糟糕的是，国内基金的代码可能和国外股票代码撞上，导致更新错误价格。\n更新价格接口 万幸，官方文档1中给出了更新价格的 scheme 规范，理论上只要在 safari 浏览器中输入类似于 moneywiz://updateholding?symbol={FCODE}.CN\u0026amp;price={dwjz}\u0026amp;date={date} 的链接即可更新价格。\n获取价格\u0026amp;自动化脚本 网上基本都是在爬天天基金的数据，本项目自然不会例外，天天基金 Api 给出了简便的接口，在本地部署这个项目即可，安装教程见快速开始。\n为了方便起见，我是在mac上跑的脚本~~，如果没有mac，可以尝试下脚本+捷径的方案？我没试过~~\n为了防止和国外股票撞上，给基金代码后面加了 .CN 尾缀，这一点需要在 MoneyWiz 记录时注意补上，脚本比较简单，就直接给出来了。\nimport webbrowser import requests import json import time pageIndex = 1 pagesize = 100 tickers = [\u0026#34;002963\u0026#34;] # 基金代码 for ticker in tickers: FCODE = ticker resp = requests.get(\u0026#34;http://localhost:3000/fundMNHisNetList\u0026#34;, params={ \u0026#34;FCODE\u0026#34;: FCODE, \u0026#34;pageIndex\u0026#34;: pageIndex, \u0026#34;pagesize\u0026#34;: pagesize }) if resp.status_code \u0026gt;= 400: continue datas = json.loads(resp.content).get(\u0026#34;Datas\u0026#34;, []) for data in datas: dwjz = data.get(\u0026#34;DWJZ\u0026#34;, \u0026#34;\u0026#34;) if dwjz == \u0026#34;\u0026#34;: continue date = data.get(\u0026#34;FSRQ\u0026#34;, \u0026#34;\u0026#34;) if date == \u0026#34;\u0026#34;: continue date = date.replace(\u0026#34;-\u0026#34;, \u0026#34;\u0026#34;) moneywiz = f\u0026#34;moneywiz://updateholding?symbol={FCODE}.CN\u0026amp;price={dwjz}\u0026amp;date={date}\u0026#34; webbrowser.open(moneywiz) # 运行 time.sleep(1) 在结尾，感谢 moneywiz-china-funds 给到的思路。\n","keywords":["MoneyWiz","Beancount","记账"],"articleBody":"如题，MoneyWiz 虽然能够根据基金代码自动更新基金价格，但是使用的是 yahoo 的 api，不仅链接不稳定，对中国基金的支持也不够好。更糟糕的是，国内基金的代码可能和国外股票代码撞上，导致更新错误价格。\n更新价格接口 万幸，官方文档1中给出了更新价格的 scheme 规范，理论上只要在 safari 浏览器中输入类似于 moneywiz://updateholding?symbol={FCODE}.CN\u0026price={dwjz}\u0026date={date} 的链接即可更新价格。\n获取价格\u0026自动化脚本 网上基本都是在爬天天基金的数据，本项目自然不会例外，天天基金 Api 给出了简便的接口，在本地部署这个项目即可，安装教程见快速开始。\n为了方便起见，我是在mac上跑的脚本~~，如果没有mac，可以尝试下脚本+捷径的方案？我没试过~~\n为了防止和国外股票撞上，给基金代码后面加了 .CN 尾缀，这一点需要在 MoneyWiz 记录时注意补上，脚本比较简单，就直接给出来了。\nimport webbrowser import requests import json import time pageIndex = 1 pagesize = 100 tickers = [\"002963\"] # 基金代码 for ticker in tickers: FCODE = ticker resp = requests.get(\"http://localhost:3000/fundMNHisNetList\", params={ \"FCODE\": FCODE, \"pageIndex\": pageIndex, \"pagesize\": pagesize }) if resp.status_code \u003e= 400: continue datas = json.loads(resp.content).get(\"Datas\", []) for data in datas: dwjz = data.get(\"DWJZ\", \"\") if dwjz == \"\": continue date = data.get(\"FSRQ\", \"\") if date == \"\": continue date = date.replace(\"-\", \"\") moneywiz = f\"moneywiz://updateholding?symbol={FCODE}.CN\u0026price={dwjz}\u0026date={date}\" webbrowser.open(moneywiz) # 运行 time.sleep(1) 在结尾，感谢 moneywiz-china-funds 给到的思路。\nhttps://help.wiz.money/en/articles/4525440-automate-transaction-management-with-url-schemas ↩︎\n","wordCount":"106","inLanguage":"en","datePublished":"2024-11-02T00:00:00Z","dateModified":"2024-11-02T00:00:00Z","author":{"@type":"Person","name":"Meowstic"},"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:1313/posts/moneywiz-%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0%E5%9B%BD%E5%86%85%E5%9F%BA%E9%87%91%E4%BB%B7%E6%A0%BC/"},"publisher":{"@type":"Organization","name":"Meowstic's Site","logo":{"@type":"ImageObject","url":"http://localhost:1313/favicon.ico"}}}</script></head><body id=top><header class=header><nav class=nav><div class=logo><a href=http://localhost:1313/ accesskey=h title="Meowstic's Site (Alt + H)">Meowstic's Site</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme">
+<svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+<svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=http://localhost:1313/categories/ title=分类><span>分类</span></a></li><li><a href=http://localhost:1313/tags/ title=标签><span>标签</span></a></li><li><a href=http://localhost:1313/about/ title=About><span>About</span></a></li><li><a href=http://localhost:1313/posts/ title=Posts><span>Posts</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=http://localhost:1313/>Home</a>&nbsp;»&nbsp;<a href=http://localhost:1313/posts/>Posts</a></div><h1 class="post-title entry-hint-parent">MoneyWiz 自动更新国内基金价格
+<span class=entry-hint title=Draft><svg height="35" viewBox="0 -960 960 960" fill="currentColor"><path d="M160-410v-60h3e2v60H160zm0-165v-60h470v60H160zm0-165v-60h470v60H160zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22-4.5 22.5T862.09-380L643-160H520zm3e2-263-37-37 37 37zM580-220h38l121-122-18-19-19-18-122 121v38zm141-141-19-18 37 37-18-19z"/></svg></span></h1><div class=post-meta><span title='2024-11-02 00:00:00 +0000 UTC'>November 2, 2024</span>&nbsp;·&nbsp;<span>Meowstic</span></div></header><div class=post-content><p>如题，MoneyWiz 虽然能够根据基金代码自动更新基金价格，但是使用的是 yahoo 的 api，不仅链接不稳定，对中国基金的支持也不够好。更糟糕的是，国内基金的代码可能和国外股票代码撞上，导致更新错误价格。</p><h2 id=更新价格接口>更新价格接口<a hidden class=anchor aria-hidden=true href=#更新价格接口>#</a></h2><p>万幸，官方文档<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>中给出了更新价格的 scheme 规范，理论上只要在 safari 浏览器中输入类似于 <code>moneywiz://updateholding?symbol={FCODE}.CN&amp;price={dwjz}&amp;date={date}</code> 的链接即可更新价格。</p><h2 id=获取价格自动化脚本>获取价格&自动化脚本<a hidden class=anchor aria-hidden=true href=#获取价格自动化脚本>#</a></h2><p>网上基本都是在爬天天基金的数据，本项目自然不会例外，<a href=https://kouchao.github.io/TiantianFundApi/apis/#%E8%8E%B7%E5%8F%96%E5%9F%BA%E9%87%91%E5%8E%86%E5%8F%B2%E5%87%80%E5%80%BC>天天基金 Api</a> 给出了简便的接口，在本地部署这个项目即可，安装教程见<a href=https://kouchao.github.io/TiantianFundApi/guide/>快速开始</a>。</p><p>为了方便起见，我是在mac上跑的脚本~~，如果没有mac，可以尝试下脚本+捷径的方案？我没试过~~</p><p>为了防止和国外股票撞上，给基金代码后面加了 <code>.CN</code> 尾缀，这一点需要在 MoneyWiz 记录时注意补上，脚本比较简单，就直接给出来了。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#f92672>import</span> webbrowser  
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> requests  
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> json
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> time
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>pageIndex <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>  
+</span></span><span style=display:flex><span>pagesize <span style=color:#f92672>=</span> <span style=color:#ae81ff>100</span>  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>tickers <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;002963&#34;</span>]  <span style=color:#75715e># 基金代码  </span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> ticker <span style=color:#f92672>in</span> tickers:  
+</span></span><span style=display:flex><span>    FCODE <span style=color:#f92672>=</span> ticker  
+</span></span><span style=display:flex><span>    resp <span style=color:#f92672>=</span> requests<span style=color:#f92672>.</span>get(<span style=color:#e6db74>&#34;http://localhost:3000/fundMNHisNetList&#34;</span>, params<span style=color:#f92672>=</span>{  
+</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#34;FCODE&#34;</span>: FCODE,  
+</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#34;pageIndex&#34;</span>: pageIndex,  
+</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#34;pagesize&#34;</span>: pagesize  
+</span></span><span style=display:flex><span>    })  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> resp<span style=color:#f92672>.</span>status_code <span style=color:#f92672>&gt;=</span> <span style=color:#ae81ff>400</span>:  
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>continue</span>  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>    datas <span style=color:#f92672>=</span> json<span style=color:#f92672>.</span>loads(resp<span style=color:#f92672>.</span>content)<span style=color:#f92672>.</span>get(<span style=color:#e6db74>&#34;Datas&#34;</span>, [])  
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> data <span style=color:#f92672>in</span> datas:  
+</span></span><span style=display:flex><span>        dwjz <span style=color:#f92672>=</span> data<span style=color:#f92672>.</span>get(<span style=color:#e6db74>&#34;DWJZ&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>)  
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> dwjz <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;&#34;</span>:  
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>continue</span>  
+</span></span><span style=display:flex><span>        date <span style=color:#f92672>=</span> data<span style=color:#f92672>.</span>get(<span style=color:#e6db74>&#34;FSRQ&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>)  
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> date <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;&#34;</span>:  
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>continue</span>  
+</span></span><span style=display:flex><span>        date <span style=color:#f92672>=</span> date<span style=color:#f92672>.</span>replace(<span style=color:#e6db74>&#34;-&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>)  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>        moneywiz <span style=color:#f92672>=</span> <span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;moneywiz://updateholding?symbol=</span><span style=color:#e6db74>{</span>FCODE<span style=color:#e6db74>}</span><span style=color:#e6db74>.CN&amp;price=</span><span style=color:#e6db74>{</span>dwjz<span style=color:#e6db74>}</span><span style=color:#e6db74>&amp;date=</span><span style=color:#e6db74>{</span>date<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>  
+</span></span><span style=display:flex><span>        webbrowser<span style=color:#f92672>.</span>open(moneywiz)  <span style=color:#75715e># 运行  </span>
+</span></span><span style=display:flex><span>        time<span style=color:#f92672>.</span>sleep(<span style=color:#ae81ff>1</span>)
+</span></span></code></pre></div><p>在结尾，感谢 <strong><a href=https://github.com/log924/moneywiz-china-funds>moneywiz-china-funds</a></strong> 给到的思路。</p><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p><a href=https://help.wiz.money/en/articles/4525440-automate-transaction-management-with-url-schemas>https://help.wiz.money/en/articles/4525440-automate-transaction-management-with-url-schemas</a>&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div><footer class=post-footer><ul class=post-tags><li><a href=http://localhost:1313/tags/moneywiz/>MoneyWiz</a></li><li><a href=http://localhost:1313/tags/beancount/>Beancount</a></li><li><a href=http://localhost:1313/tags/%E8%AE%B0%E8%B4%A6/>记账</a></li></ul></footer></article></main><footer class=footer><span>&copy; 2025 <a href=http://localhost:1313/>Meowstic's Site</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+<a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentColor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");if(menu){const e=localStorage.getItem("menu-scroll-position");e&&(menu.scrollLeft=parseInt(e,10)),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}}document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{const e=document.querySelector("html");e.dataset.theme==="dark"?(e.dataset.theme="light",localStorage.setItem("pref-theme","light")):(e.dataset.theme="dark",localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
